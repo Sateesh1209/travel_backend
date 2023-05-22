@@ -54,7 +54,7 @@ jobs:
           command: |
             cd nodeapps/travel_backend
             npm install
-            sudo systemctl stop recipe-backend
+            sudo systemctl stop travel_backend
             sudo cp travel_backend.service /lib/systemd/system/travel_backend.service
             sudo systemctl daemon-reload
             sudo systemctl start travel_backend
