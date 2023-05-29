@@ -1,12 +1,36 @@
+const db = require("../models");
+const Recipe = db.recipe;
 module.exports = (sequelize, Sequelize) => {
   const RecipeStep = sequelize.define("recipeStep", {
-    stepNumber: {
+    id: {
+      type: Sequelize.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    day: {
       type: Sequelize.INTEGER,
       allowNull: false,
     },
-    instruction: {
+    location: {
+      type: Sequelize.STRING,
+      allowNull: false,
+    },
+    hotelName: {
+      type: Sequelize.STRING,
+      allowNull: false,
+    },
+    meals: {
+      type: Sequelize.STRING,
+      allowNull: false,
+    },
+    visitPlaces: {
       type: Sequelize.STRING(5000),
       allowNull: false,
+    },
+    recipeId: {
+      type: Sequelize.INTEGER,
+      references: { model: Recipe, key: 'id' },
+      onDelete: 'cascade',
     },
   });
   return RecipeStep;

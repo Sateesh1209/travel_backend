@@ -7,20 +7,17 @@ const Op = db.Sequelize.Op;
 // Create and Save a new Recipe
 exports.create = (req, res) => {
   // Validate request
-  if (req.body.name === undefined) {
-    const error = new Error("Name cannot be empty for recipe!");
+  if (req.body.tripName === undefined) {
+    const error = new Error("tripName cannot be empty for recipe!");
     error.statusCode = 400;
     throw error;
-  } else if (req.body.description === undefined) {
-    const error = new Error("Description cannot be empty for recipe!");
+  }else if (req.body.countryName === undefined) {
+    const error = new Error("countryName cannot be empty for recipe!");
     error.statusCode = 400;
     throw error;
-  } else if (req.body.servings === undefined) {
-    const error = new Error("Servings cannot be empty for recipe!");
-    error.statusCode = 400;
-    throw error;
-  } else if (req.body.time === undefined) {
-    const error = new Error("Time cannot be empty for recipe!");
+  }
+   else if (req.body.travelDescription === undefined) {
+    const error = new Error("travelDescription cannot be empty for recipe!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.isPublished === undefined) {
@@ -31,26 +28,54 @@ exports.create = (req, res) => {
     const error = new Error("User Id cannot be empty for recipe!");
     error.statusCode = 400;
     throw error;
+  } else if (req.body.fromDate === undefined) {
+    const error = new Error("User Id cannot be empty for recipe!");
+    error.statusCode = 400;
+    throw error;
+  } else if (req.body.toDate === undefined) {
+    const error = new Error("User Id cannot be empty for recipe!");
+    error.statusCode = 400;
+    throw error;
   }
 
   // Create a Recipe
-  const recipe = {
-    name: req.body.name,
-    description: req.body.description,
-    servings: req.body.servings,
-    time: req.body.time,
+  const trip = {
+    name: req.body.tripName,
+    countryName: req.body.countryName,
+    description: req.body.travelDescription,
+    capacity: req.body.capacity ?? 10,
+    fromDate: req.body.fromDate,
+    toDate: req.body.toDate,
     isPublished: req.body.isPublished ? req.body.isPublished : false,
     userId: req.body.userId,
   };
+  
+  const travelIterations = req.body.tripIterations
+  const tripItenary = []
+  travelIterations?.map((item) => {
+    tripItenary.push({
+      day: item.day,
+      location: item.location,
+      hotelName: item.hotelName,
+      meals: item.meals,
+      visitPlaces: item.visitPlaces.join(",")
+    })
+  })
+  
   // Save Recipe in the database
-  Recipe.create(recipe)
+  Recipe.create(trip)
     .then((data) => {
-      res.send(data);
+      tripItenary.map(item => item.recipeId= data.id)
+      RecipeStep.bulkCreate(tripItenary).then((data) => {
+        res.send({status: 'success', msg: 'Trip successfully created'});
+      })
+      // res.send(data);
     })
     .catch((err) => {
       res.status(500).send({
+        status: 'failure',
         message:
-          err.message || "Some error occurred while creating the Recipe.",
+          err.message || "Error while creating trip, Please try again.",
       });
     });
 };
@@ -59,31 +84,31 @@ exports.create = (req, res) => {
 exports.findAllForUser = (req, res) => {
   const userId = req.params.userId;
   Recipe.findAll({
-    where: { userId: userId },
+    // where: { userId: userId },
     include: [
       {
         model: RecipeStep,
         as: "recipeStep",
         required: false,
-        include: [
-          {
-            model: RecipeIngredient,
-            as: "recipeIngredient",
-            required: false,
-            include: [
-              {
-                model: Ingredient,
-                as: "ingredient",
-                required: false,
-              },
-            ],
-          },
-        ],
+        // include: [
+        //   {
+        //     model: RecipeIngredient,
+        //     as: "recipeIngredient",
+        //     required: false,
+        //     include: [
+        //       {
+        //         model: Ingredient,
+        //         as: "ingredient",
+        //         required: false,
+        //       },
+        //     ],
+        //   },
+        // ],
       },
     ],
     order: [
       ["name", "ASC"],
-      [RecipeStep, "stepNumber", "ASC"],
+      [RecipeStep, "day", "ASC"],
     ],
   })
     .then((data) => {
@@ -112,25 +137,25 @@ exports.findAllPublished = (req, res) => {
         model: RecipeStep,
         as: "recipeStep",
         required: false,
-        include: [
-          {
-            model: RecipeIngredient,
-            as: "recipeIngredient",
-            required: false,
-            include: [
-              {
-                model: Ingredient,
-                as: "ingredient",
-                required: false,
-              },
-            ],
-          },
-        ],
+        // include: [
+        //   {
+        //     model: RecipeIngredient,
+        //     as: "recipeIngredient",
+        //     required: false,
+        //     include: [
+        //       {
+        //         model: Ingredient,
+        //         as: "ingredient",
+        //         required: false,
+        //       },
+        //     ],
+        //   },
+        // ],
       },
     ],
     order: [
       ["name", "ASC"],
-      [RecipeStep, "stepNumber", "ASC"],
+      [RecipeStep, "day", "ASC"],
     ],
   })
     .then((data) => {
@@ -159,23 +184,23 @@ exports.findOne = (req, res) => {
         model: RecipeStep,
         as: "recipeStep",
         required: false,
-        include: [
-          {
-            model: RecipeIngredient,
-            as: "recipeIngredient",
-            required: false,
-            include: [
-              {
-                model: Ingredient,
-                as: "ingredient",
-                required: false,
-              },
-            ],
-          },
-        ],
+        // include: [
+        //   {
+        //     model: RecipeIngredient,
+        //     as: "recipeIngredient",
+        //     required: false,
+        //     include: [
+        //       {
+        //         model: Ingredient,
+        //         as: "ingredient",
+        //         required: false,
+        //       },
+        //     ],
+        //   },
+        // ],
       },
     ],
-    order: [[RecipeStep, "stepNumber", "ASC"]],
+    order: [[RecipeStep, "day", "ASC"]],
   })
     .then((data) => {
       if (data) {
@@ -195,17 +220,55 @@ exports.findOne = (req, res) => {
 // Update a Recipe by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
-  Recipe.update(req.body, {
+  const trip = {
+    name: req.body.tripName,
+    countryName: req.body.countryName,
+    description: req.body.travelDescription,
+    capacity: req.body.capacity ?? 10,
+    fromDate: req.body.fromDate,
+    toDate: req.body.toDate,
+    isPublished: req.body.isPublished ? req.body.isPublished : false,
+    userId: req.body.userId,
+  };
+  const travelIterations = req.body.tripIterations
+  const tripItenary = []
+  travelIterations?.map((item) => {
+    tripItenary.push({
+      id: item.id,
+      day: item.day,
+      location: item.location,
+      hotelName: item.hotelName,
+      meals: item.meals,
+      visitPlaces: item.visitPlaces.join(","),
+      recipeId: id
+    })
+  })
+  Recipe.update(trip, {
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
-        res.send({
-          message: "Recipe was updated successfully.",
-        });
+        Promise.all(tripItenary.map(
+          async (trip) => {
+            await RecipeStep.update(trip, {
+              where: { id: trip.id },
+            })
+          }
+        )).then((data) => {
+            res.send({status: 'success', msg: 'Trip updated successfully'});
+          })
+        // RecipeStep.bulkCreate(tripItenary, 
+        //   {
+        //     updateOnDuplicate: ['id'],
+        //   }).then((data) => {
+        //   res.send({status: 'success', msg: 'Trip updated successfully'});
+        // })
+        // res.send({
+        //   message: "Trip was updated successfully.",
+        // });
       } else {
         res.send({
-          message: `Cannot update Recipe with id=${id}. Maybe Recipe was not found or req.body is empty!`,
+          message: `Cannot update Trip with id=${id}. Maybe Trip was not found or req.body is empty!`,
         });
       }
     })
@@ -223,12 +286,10 @@ exports.delete = (req, res) => {
   })
     .then((number) => {
       if (number == 1) {
-        res.send({
-          message: "Recipe was deleted successfully!",
-        });
+          res.send({status: "success", msg: 'Trip successfully deleted'})
       } else {
         res.send({
-          message: `Cannot delete Recipe with id=${id}. Maybe Recipe was not found!`,
+          message: `Cannot delete Trip with id=${id}. Maybe Trip was not found!`,
         });
       }
     })
