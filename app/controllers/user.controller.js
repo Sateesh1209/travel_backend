@@ -46,6 +46,7 @@ exports.create = async (req, res) => {
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           email: req.body.email,
+          isAdmin: false,
           password: hash,
           salt: salt,
         };
@@ -55,7 +56,7 @@ exports.create = async (req, res) => {
           .then(async (data) => {
             // Create a Session for the new user
             let userId = data.id;
-
+            let isAdmin = data.isAdmin
             let expireTime = new Date();
             expireTime.setDate(expireTime.getDate() + 1);
 
@@ -72,6 +73,7 @@ exports.create = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 id: user.id,
+                isAdmin: isAdmin,
                 token: token,
               };
               res.send(userInfo);
