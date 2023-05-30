@@ -13,27 +13,33 @@ exports.login = async (req, res) => {
     await User.findByPk(userId).then((data) => {
       user = data;
     });
+    if(req.body.isAdmin === user.isAdmin){
+      let expireTime  = new Date();
+      expireTime.setDate(expireTime.getDate() + 1);
 
-    let expireTime = new Date();
-    expireTime.setDate(expireTime.getDate() + 1);
-
-    const session = {
-      email: user.email,
-      userId: userId,
-      expirationDate: expireTime,
-    };
-    await Session.create(session).then(async (data) => {
-      let sessionId = data.id;
-      let token = await encrypt(sessionId);
-      let userInfo = {
+      const session = {
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        id: user.id,
-        token: token,
+        userId: userId,
+        expirationDate: expireTime,
       };
-      res.send(userInfo);
-    });
+      await Session.create(session).then(async (data) => {
+        let sessionId = data.id;
+        let token = await encrypt(sessionId);
+        let userInfo = {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          id: user.id,
+          isAdmin: user.isAdmin,
+          token: token,
+        };
+        res.send(userInfo);
+      });
+    }else {
+      return res.status(401).send({
+        message: "User not found!",
+      });
+    }
   }
 };
 
