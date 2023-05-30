@@ -4,29 +4,29 @@ module.exports = (app) => {
   var router = require("express").Router();
 
   // Create a new Recipe
-  router.post("/recipes/", [authenticateRoute], Recipe.create);
+  router.post("/tripPlan/", [authenticateRoute], Recipe.create);
 
-  // Retrieve all Recipes for user
+  // Retrieve all tripPlan for user
   router.get(
-    "/recipes/user/:userId",
+    "/tripPlan/user/:userId",
     [authenticateRoute],
     Recipe.findAllForUser
   );
 
-  // Retrieve all published Recipes
-  router.get("/recipes/", Recipe.findAllPublished);
+  // Retrieve all published tripPlan
+  router.get("/tripPlan/", Recipe.findAllPublished);
 
   // Retrieve a single Recipe with id
-  router.get("/recipes/:id", Recipe.findOne);
+  router.get("/tripPlan/:id", Recipe.findOne);
 
   // Update a Recipe with id
-  router.put("/recipes/:id", [authenticateRoute], Recipe.update);
+  router.put("/tripPlan/:id", [authenticateRoute], Recipe.update);
 
   // Delete a Recipe with id
-  router.delete("/recipes/:id", [authenticateRoute], Recipe.delete);
+  router.delete("/tripPlan/:id", [authenticateRoute], Recipe.delete);
 
-  // Delete all Recipes
-  router.delete("/recipes/", [authenticateRoute], Recipe.deleteAll);
+  // Delete all tripPlan
+  router.delete("/tripPlan/", [authenticateRoute], Recipe.deleteAll);
 
   app.use("/travelapi", router);
 };
