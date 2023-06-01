@@ -27,6 +27,10 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING(5000),
       allowNull: false,
     },
+    dayEvents: {
+      type: Sequelize.STRING(5000),
+      allowNull: false,
+    },
     recipeId: {
       type: Sequelize.INTEGER,
       references: { model: Recipe, key: 'id' },

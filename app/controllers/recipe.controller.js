@@ -11,12 +11,11 @@ exports.create = (req, res) => {
     const error = new Error("tripName cannot be empty for recipe!");
     error.statusCode = 400;
     throw error;
-  }else if (req.body.countryName === undefined) {
+  } else if (req.body.countryName === undefined) {
     const error = new Error("countryName cannot be empty for recipe!");
     error.statusCode = 400;
     throw error;
-  }
-   else if (req.body.travelDescription === undefined) {
+  } else if (req.body.travelDescription === undefined) {
     const error = new Error("travelDescription cannot be empty for recipe!");
     error.statusCode = 400;
     throw error;
@@ -49,33 +48,33 @@ exports.create = (req, res) => {
     isPublished: req.body.isPublished ? req.body.isPublished : false,
     userId: req.body.userId,
   };
-  
-  const travelIterations = req.body.tripIterations
-  const tripItenary = []
+
+  const travelIterations = req.body.tripIterations;
+  const tripItenary = [];
   travelIterations?.map((item) => {
     tripItenary.push({
       day: item.day,
       location: item.location,
       hotelName: item.hotelName,
       meals: item.meals,
-      visitPlaces: item.visitPlaces.join(",")
-    })
-  })
-  
+      visitPlaces: item.visitPlaces.join(","),
+      dayEvents: item.dayEvents.join(","),
+    });
+  });
+
   // Save Recipe in the database
   Recipe.create(trip)
     .then((data) => {
-      tripItenary.map(item => item.recipeId= data.id)
+      tripItenary.map((item) => (item.recipeId = data.id));
       RecipeStep.bulkCreate(tripItenary).then((data) => {
-        res.send({status: 'success', msg: 'Trip successfully created'});
-      })
+        res.send({ status: "success", msg: "Trip successfully created" });
+      });
       // res.send(data);
     })
     .catch((err) => {
       res.status(500).send({
-        status: 'failure',
-        message:
-          err.message || "Error while creating trip, Please try again.",
+        status: "failure",
+        message: err.message || "Error while creating trip, Please try again.",
       });
     });
 };
@@ -230,8 +229,8 @@ exports.update = (req, res) => {
     isPublished: req.body.isPublished ? req.body.isPublished : false,
     userId: req.body.userId,
   };
-  const travelIterations = req.body.tripIterations
-  const tripItenary = []
+  const travelIterations = req.body.tripIterations;
+  const tripItenary = [];
   travelIterations?.map((item) => {
     tripItenary.push({
       id: item.id,
@@ -240,24 +239,25 @@ exports.update = (req, res) => {
       hotelName: item.hotelName,
       meals: item.meals,
       visitPlaces: item.visitPlaces.join(","),
-      recipeId: id
-    })
-  })
+      dayEvents: item.dayEvents.join(","),
+      recipeId: id,
+    });
+  });
   Recipe.update(trip, {
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
-        Promise.all(tripItenary.map(
-          async (trip) => {
+        Promise.all(
+          tripItenary.map(async (trip) => {
             await RecipeStep.update(trip, {
               where: { id: trip.id },
-            })
-          }
-        )).then((data) => {
-            res.send({status: 'success', msg: 'Trip updated successfully'});
+            });
           })
-        // RecipeStep.bulkCreate(tripItenary, 
+        ).then((data) => {
+          res.send({ status: "success", msg: "Trip updated successfully" });
+        });
+        // RecipeStep.bulkCreate(tripItenary,
         //   {
         //     updateOnDuplicate: ['id'],
         //   }).then((data) => {
@@ -286,7 +286,7 @@ exports.delete = (req, res) => {
   })
     .then((number) => {
       if (number == 1) {
-          res.send({status: "success", msg: 'Trip successfully deleted'})
+        res.send({ status: "success", msg: "Trip successfully deleted" });
       } else {
         res.send({
           message: `Cannot delete Trip with id=${id}. Maybe Trip was not found!`,
