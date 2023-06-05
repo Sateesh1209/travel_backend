@@ -30,11 +30,11 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/auth.routes.js")(app);
-require("./app/routes/travellers.routes")(app);
-require("./app/routes/trips.routes")(app);
-require("./app/routes/tripItenary.routes")(app);
-require("./app/routes/tripTravellers.routes")(app);
-require("./app/routes/user.routes")(app);
+require("./app/routes/travellers.routes.js")(app);
+require("./app/routes/trips.routes.js")(app);
+require("./app/routes/tripItenary.routes.js")(app);
+require("./app/routes/tripTravellers.routes.js")(app);
+require("./app/routes/user.routes.js")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 3201;
