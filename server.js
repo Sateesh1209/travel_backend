@@ -7,7 +7,9 @@ const app = express();
 
 const db = require("./app/models");
 
-db.sequelize.sync();
+db.sequelize.sync({
+  force: false
+});
 
 var corsOptions = {
   origin: "http://localhost:8081",
@@ -24,14 +26,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // simple route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to the recipe backend." });
+  res.json({ message: "Welcome to the travel backend." });
 });
 
 require("./app/routes/auth.routes.js")(app);
-require("./app/routes/ingredient.routes")(app);
-require("./app/routes/recipe.routes")(app);
-require("./app/routes/recipeStep.routes")(app);
-require("./app/routes/recipeIngredient.routes")(app);
+require("./app/routes/travellers.routes")(app);
+require("./app/routes/trips.routes")(app);
+require("./app/routes/tripItenary.routes")(app);
+require("./app/routes/tripTravellers.routes")(app);
 require("./app/routes/user.routes")(app);
 
 // set port, listen for requests

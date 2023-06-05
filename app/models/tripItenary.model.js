@@ -1,12 +1,5 @@
-const db = require("../models");
-const Recipe = db.recipe;
 module.exports = (sequelize, Sequelize) => {
-  const RecipeStep = sequelize.define("recipeStep", {
-    id: {
-      type: Sequelize.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
+  const TripItenary = sequelize.define("tripItenary", {
     day: {
       type: Sequelize.INTEGER,
       allowNull: false,
@@ -31,11 +24,6 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING(5000),
       allowNull: false,
     },
-    recipeId: {
-      type: Sequelize.INTEGER,
-      references: { model: Recipe, key: 'id' },
-      onDelete: 'cascade',
-    },
   });
-  return RecipeStep;
+  return TripItenary;
 };

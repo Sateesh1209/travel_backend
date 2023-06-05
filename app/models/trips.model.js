@@ -1,10 +1,6 @@
+
 module.exports = (sequelize, Sequelize) => {
-  const Recipe = sequelize.define("recipe", {
-    id: {
-      type: Sequelize.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
+  const Trips = sequelize.define("trips", {
     name: {
       type: Sequelize.STRING,
       allowNull: false,
@@ -32,7 +28,7 @@ module.exports = (sequelize, Sequelize) => {
     isPublished: {
       type: Sequelize.BOOLEAN,
       allowNull: false,
-    },
+    }
   });
-  return Recipe;
+  return Trips;
 };
