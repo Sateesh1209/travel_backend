@@ -1,39 +1,39 @@
 const db = require("../models");
-const Ingredient = db.ingredient;
+const Travellers = db.travellers;
 const Op = db.Sequelize.Op;
 
-// Create and Save a new Ingredient
+// Create and Save a new Travellers
 exports.create = (req, res) => {
   // Validate request
   if (req.body.name === undefined) {
-    const error = new Error("Name cannot be empty for ingredient!");
+    const error = new Error("Name cannot be empty for travellers!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.unit === undefined) {
-    const error = new Error("Unit cannot be empty for ingredient!");
+    const error = new Error("Unit cannot be empty for travellers!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.pricePerUnit === undefined) {
-    const error = new Error("Price per unit cannot be empty for ingredient!");
+    const error = new Error("Price per unit cannot be empty for travellers!");
     error.statusCode = 400;
     throw error;
   }
 
-  // Create a Ingredient
+  // Create a Travellers
   const ingredient = {
     name: req.body.name,
     unit: req.body.unit,
     pricePerUnit: req.body.pricePerUnit,
   };
-  // Save Ingredient in the database
-  Ingredient.create(ingredient)
+  // Save Travellers in the database
+  Travellers.create(ingredient)
     .then((data) => {
       res.send(data);
     })
     .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while creating the Ingredient.",
+          err.message || "Some error occurred while creating the Travellers.",
       });
     });
 };
@@ -49,7 +49,7 @@ exports.findAll = (req, res) => {
       }
     : null;
 
-  Ingredient.findAll({ where: condition, order: [["name", "ASC"]] })
+  Travellers.findAll({ where: condition, order: [["name", "ASC"]] })
     .then((data) => {
       res.send(data);
     })
@@ -61,74 +61,74 @@ exports.findAll = (req, res) => {
     });
 };
 
-// Find a single Ingredient with an id
+// Find a single Travellers with an id
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
-  Ingredient.findByPk(id)
+  Travellers.findByPk(id)
     .then((data) => {
       res.send(data);
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Error retrieving Ingredient with id=" + id,
+        message: err.message || "Error retrieving Travellers with id=" + id,
       });
     });
 };
 
-// Update a Ingredient by the id in the request
+// Update a Travellers by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
 
-  Ingredient.update(req.body, {
+  Travellers.update(req.body, {
     where: { id: id },
   })
     .then((num) => {
       if (num == 1) {
         res.send({
-          message: "Ingredient was updated successfully.",
+          message: "Travellers was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update Ingredient with id=${id}. Maybe Ingredient was not found or req.body is empty!`,
+          message: `Cannot update Travellers with id=${id}. Maybe Travellers was not found or req.body is empty!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Error updating Ingredient with id=" + id,
+        message: err.message || "Error updating Travellers with id=" + id,
       });
     });
 };
 
-// Delete a Ingredient with the specified id in the request
+// Delete a Travellers with the specified id in the request
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  Ingredient.destroy({
+  Travellers.destroy({
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
         res.send({
-          message: "Ingredient was deleted successfully!",
+          message: "Travellers was deleted successfully!",
         });
       } else {
         res.send({
-          message: `Cannot delete Ingredient with id=${id}. Maybe Ingredient was not found!`,
+          message: `Cannot delete Travellers with id=${id}. Maybe Travellers was not found!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Could not delete Ingredient with id=" + id,
+        message: err.message || "Could not delete Travellers with id=" + id,
       });
     });
 };
 
 // Delete all Ingredients from the database.
 exports.deleteAll = (req, res) => {
-  Ingredient.destroy({
+  Travellers.destroy({
     where: {},
     truncate: false,
   })

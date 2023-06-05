@@ -1,43 +1,43 @@
 const db = require("../models");
-const Recipe = db.recipe;
-const RecipeStep = db.recipeStep;
-const RecipeIngredient = db.recipeIngredient;
-const Ingredient = db.ingredient;
+const Trip = db.trips;
+const TripItenary = db.tripItenary;
+const TripTravellers = db.tripTravellers;
+const Travellers = db.travellers;
 const Op = db.Sequelize.Op;
-// Create and Save a new Recipe
+// Create and Save a new Trip
 exports.create = (req, res) => {
   // Validate request
   if (req.body.tripName === undefined) {
-    const error = new Error("tripName cannot be empty for recipe!");
+    const error = new Error("tripName cannot be empty for trip!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.countryName === undefined) {
-    const error = new Error("countryName cannot be empty for recipe!");
+    const error = new Error("countryName cannot be empty for trip!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.travelDescription === undefined) {
-    const error = new Error("travelDescription cannot be empty for recipe!");
+    const error = new Error("travelDescription cannot be empty for trip!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.isPublished === undefined) {
-    const error = new Error("Is Published cannot be empty for recipe!");
+    const error = new Error("Is Published cannot be empty for trip!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.userId === undefined) {
-    const error = new Error("User Id cannot be empty for recipe!");
+    const error = new Error("User Id cannot be empty for trip!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.fromDate === undefined) {
-    const error = new Error("User Id cannot be empty for recipe!");
+    const error = new Error("fromDate Id cannot be empty for trip!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.toDate === undefined) {
-    const error = new Error("User Id cannot be empty for recipe!");
+    const error = new Error("toDate Id cannot be empty for trip!");
     error.statusCode = 400;
     throw error;
   }
 
-  // Create a Recipe
+  // Create a Trip
   const trip = {
     name: req.body.tripName,
     countryName: req.body.countryName,
@@ -62,11 +62,11 @@ exports.create = (req, res) => {
     });
   });
 
-  // Save Recipe in the database
-  Recipe.create(trip)
+  // Save Trip in the database
+  Trip.create(trip)
     .then((data) => {
-      tripItenary.map((item) => (item.recipeId = data.id));
-      RecipeStep.bulkCreate(tripItenary).then((data) => {
+      tripItenary.map((item) => (item.tripId = data.id));
+      TripItenary.bulkCreate(tripItenary).then((data) => {
         res.send({ status: "success", msg: "Trip successfully created" });
       });
       // res.send(data);
@@ -79,35 +79,21 @@ exports.create = (req, res) => {
     });
 };
 
-// Find all Recipes for a user
+// Find all Trips for a user
 exports.findAllForUser = (req, res) => {
   const userId = req.params.userId;
-  Recipe.findAll({
+  Trip.findAll({
     // where: { userId: userId },
     include: [
       {
-        model: RecipeStep,
-        as: "recipeStep",
+        model: TripItenary,
+        as: "tripItenary",
         required: false,
-        // include: [
-        //   {
-        //     model: RecipeIngredient,
-        //     as: "recipeIngredient",
-        //     required: false,
-        //     include: [
-        //       {
-        //         model: Ingredient,
-        //         as: "ingredient",
-        //         required: false,
-        //       },
-        //     ],
-        //   },
-        // ],
       },
     ],
     order: [
       ["name", "ASC"],
-      [RecipeStep, "day", "ASC"],
+      [TripItenary, "day", "ASC"],
     ],
   })
     .then((data) => {
@@ -115,46 +101,32 @@ exports.findAllForUser = (req, res) => {
         res.send(data);
       } else {
         res.status(404).send({
-          message: `Cannot find Recipes for user with id=${userId}.`,
+          message: `Cannot find Trips for user with id=${userId}.`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Error retrieving Recipes for user with id=" + userId,
+          err.message || "Error retrieving Trips for user with id=" + userId,
       });
     });
 };
 
-// Find all Published Recipes
+// Find all Published Trips
 exports.findAllPublished = (req, res) => {
-  Recipe.findAll({
+  Trip.findAll({
     where: { isPublished: true },
     include: [
       {
-        model: RecipeStep,
-        as: "recipeStep",
+        model: TripItenary,
+        as: "tripItenary",
         required: false,
-        // include: [
-        //   {
-        //     model: RecipeIngredient,
-        //     as: "recipeIngredient",
-        //     required: false,
-        //     include: [
-        //       {
-        //         model: Ingredient,
-        //         as: "ingredient",
-        //         required: false,
-        //       },
-        //     ],
-        //   },
-        // ],
       },
     ],
     order: [
       ["name", "ASC"],
-      [RecipeStep, "day", "ASC"],
+      [TripItenary, "day", "ASC"],
     ],
   })
     .then((data) => {
@@ -162,61 +134,47 @@ exports.findAllPublished = (req, res) => {
         res.send(data);
       } else {
         res.status(404).send({
-          message: `Cannot find Published Recipes.`,
+          message: `Cannot find Published Trips.`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Error retrieving Published Recipes.",
+        message: err.message || "Error retrieving Published Trips.",
       });
     });
 };
 
-// Find a single Recipe with an id
+// Find a single Trip with an id
 exports.findOne = (req, res) => {
   const id = req.params.id;
-  Recipe.findAll({
+  Trip.findAll({
     where: { id: id },
     include: [
       {
-        model: RecipeStep,
-        as: "recipeStep",
+        model: TripItenary,
+        as: "tripItenary",
         required: false,
-        // include: [
-        //   {
-        //     model: RecipeIngredient,
-        //     as: "recipeIngredient",
-        //     required: false,
-        //     include: [
-        //       {
-        //         model: Ingredient,
-        //         as: "ingredient",
-        //         required: false,
-        //       },
-        //     ],
-        //   },
-        // ],
       },
     ],
-    order: [[RecipeStep, "day", "ASC"]],
+    order: [[TripItenary, "day", "ASC"]],
   })
     .then((data) => {
       if (data) {
         res.send(data);
       } else {
         res.status(404).send({
-          message: `Cannot find Recipe with id=${id}.`,
+          message: `Cannot find Trip with id=${id}.`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Error retrieving Recipe with id=" + id,
+        message: err.message || "Error retrieving Trip with id=" + id,
       });
     });
 };
-// Update a Recipe by the id in the request
+// Update a Trip by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
   const trip = {
@@ -243,29 +201,20 @@ exports.update = (req, res) => {
       recipeId: id,
     });
   });
-  Recipe.update(trip, {
+  Trip.update(trip, {
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
         Promise.all(
           tripItenary.map(async (trip) => {
-            await RecipeStep.update(trip, {
+            await TripItenary.update(trip, {
               where: { id: trip.id },
             });
           })
         ).then((data) => {
           res.send({ status: "success", msg: "Trip updated successfully" });
         });
-        // RecipeStep.bulkCreate(tripItenary,
-        //   {
-        //     updateOnDuplicate: ['id'],
-        //   }).then((data) => {
-        //   res.send({status: 'success', msg: 'Trip updated successfully'});
-        // })
-        // res.send({
-        //   message: "Trip was updated successfully.",
-        // });
       } else {
         res.send({
           message: `Cannot update Trip with id=${id}. Maybe Trip was not found or req.body is empty!`,
@@ -274,14 +223,14 @@ exports.update = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Error updating Recipe with id=" + id,
+        message: err.message || "Error updating Trip with id=" + id,
       });
     });
 };
-// Delete a Recipe with the specified id in the request
+// Delete a Trip with the specified id in the request
 exports.delete = (req, res) => {
   const id = req.params.id;
-  Recipe.destroy({
+  Trip.destroy({
     where: { id: id },
   })
     .then((number) => {
@@ -295,23 +244,23 @@ exports.delete = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({
-        message: err.message || "Could not delete Recipe with id=" + id,
+        message: err.message || "Could not delete Trip with id=" + id,
       });
     });
 };
-// Delete all Recipes from the database.
+// Delete all Trips from the database.
 exports.deleteAll = (req, res) => {
-  Recipe.destroy({
+  Trip.destroy({
     where: {},
     truncate: false,
   })
     .then((number) => {
-      res.send({ message: `${number} Recipes were deleted successfully!` });
+      res.send({ message: `${number} Trips were deleted successfully!` });
     })
     .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while removing all recipes.",
+          err.message || "Some error occurred while removing all trips.",
       });
     });
 };
