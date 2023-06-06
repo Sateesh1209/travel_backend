@@ -268,12 +268,14 @@ exports.update = (req, res) => {
         }
       } else {
         res.send({
+          status: "Failed",
           message: `Cannot update TripTravellers with id=${id}. Maybe TripTravellers was not found or req.body is empty!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
+        status: 'Failure',
         message: err.message || "Error updating TripTravellers with id=" + id,
       });
     });
@@ -289,16 +291,19 @@ exports.delete = (req, res) => {
     .then((number) => {
       if (number == 1) {
         res.send({
+          status: 'Success',
           message: "TripTravellers was deleted successfully!",
         });
       } else {
         res.send({
+          Status: 'Failed',
           message: `Cannot delete TripTravellers with id=${id}. Maybe TripTravellers was not found!`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
+        status: 'Failed',
         message:
           err.message || "Could not delete TripTravellers with id=" + id,
       });

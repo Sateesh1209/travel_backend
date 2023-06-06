@@ -229,6 +229,7 @@ exports.update = (req, res) => {
     const events = item.events
     events?.map(e => {
       tripEvents.push({
+        day: item.day,
         event: e.event,
       });
     })
@@ -245,8 +246,18 @@ exports.update = (req, res) => {
           }).then((num) => {
             if(num > 0){
               TripItenary.bulkCreate(tripItenary).then((d) => {
-                tripEvents.map((item) => item.tripItenaryId = d[0].id)
-                TripEvent.bulkCreate(tripEvents).then((data) => {
+                const events = []
+                tripEvents.map((item) => {
+                  d?.map((tripItenary) => {
+                    if(tripItenary.dataValues.day === item.day){
+                      events.push({
+                        event: item.event,
+                        tripItenaryId: tripItenary.id
+                      })
+                    }
+                  })
+                })
+                TripEvent.bulkCreate(events).then((data) => {
                   res.send({ status: "success", msg: "Trip successfully updated" });
                 })
               })  
