@@ -23,6 +23,7 @@ db.tripTravellers = require("./tripTravellers.model.js")(
 );
 db.session = require("./session.model.js")(sequelize, Sequelize);
 db.user = require("./user.model.js")(sequelize, Sequelize);
+db.events = require("./events.model.js")(sequelize, Sequelize);
 
 // foreign key for session
 db.user.hasMany(
@@ -52,6 +53,15 @@ db.trips.hasMany(
 );
 db.tripItenary.belongsTo(
   db.trips,
+  {  onDelete: "CASCADE" }
+);
+
+db.tripItenary.hasMany(
+  db.events,
+  {  onDelete: "CASCADE" }
+);
+db.events.belongsTo(
+  db.tripItenary,
   {  onDelete: "CASCADE" }
 );
 

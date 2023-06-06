@@ -5,17 +5,17 @@ const Op = db.Sequelize.Op;
 // Create and Save a new TripTravellers
 exports.create = (req, res) => {
   // Validate request
-  if (req.body.quantity === undefined) {
-    const error = new Error("Quantity cannot be empty for trip travellers!");
+  if (req.body.userId === undefined) {
+    const error = new Error("UserId cannot be empty for trip travellers!");
     error.statusCode = 400;
     throw error;
   } else if (req.body.tripId === undefined) {
     const error = new Error("Trip ID cannot be empty for trip travellers!");
     error.statusCode = 400;
     throw error;
-  } else if (req.body.travellerId === undefined) {
+  } else if (req.body.emergencyContact === undefined) {
     const error = new Error(
-      "Traveller ID cannot be empty for trip travellers!"
+      "EmergencyContact cannot be empty for trip travellers!"
     );
     error.statusCode = 400;
     throw error;
@@ -23,15 +23,24 @@ exports.create = (req, res) => {
 
   // Create a TripTravellers
   const tripTravellers = {
-    quantity: req.body.quantity,
+    userId: req.body.userId,
     tripId: req.body.tripId,
-    tripItenaryId: req.body.tripItenaryId ? req.body.tripItenaryId : null,
-    ingredientId: req.body.ingredientId,
+    emergencyContact: req.body.emergencyContact,
+    totalTravellers: req.body.totalTravellers,
   };
+  const tList = req.body.travellersList
   // Save TripTravellers in the database
   TripTravellers.create(tripTravellers)
     .then((data) => {
-      res.send(data);
+      tList.map((item) => (item.tripTravellerId  = data.id));
+      try{
+        Travellers.bulkCreate(tList).then((d) => {
+            res.send({ status: "success", msg: "User successfully Joined" });
+        })        
+      }
+      catch(e) {
+        res.status(500).send({ status: "Error", msg: "Failed to register" });
+      }
     })
     .catch((err) => {
       res.status(500).send({
@@ -135,15 +144,42 @@ exports.findOne = (req, res) => {
 // Update a TripTravellers by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
-
-  TripTravellers.update(req.body, {
+  const tripTravellers = {
+    id:id,
+    userId: req.body.userId,
+    tripId: req.body.tripId,
+    emergencyContact: req.body.emergencyContact,
+    totalTravellers: req.body.totalTravellers,
+  };
+  const tList = req.body.travellersList
+  const travellers = []
+  tList?.map((traveller) => {
+    travellers.push({
+      tripTravellerId: id,
+      travellerNum: traveller.travellerNum,
+      firstName: traveller.firstName,
+      lastName: traveller.lastName
+    })
+  })
+  TripTravellers.update(tripTravellers, {
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
-        res.send({
-          message: "TripTravellers was updated successfully.",
-        });
+        try{
+          Travellers.destroy({
+            where: {tripTravellerId: id}
+          }).then((num) => {
+            if(num > 0){
+              Travellers.bulkCreate(travellers).then((d) => {
+                  res.send({ status: "success", msg: "Trip Travellers successfully updated" });
+                })
+            }
+          })
+        }
+        catch(e) {
+          res.status(500).send({ status: "Error", msg: "Failed to update Trip" });
+        }
       } else {
         res.send({
           message: `Cannot update TripTravellers with id=${id}. Maybe TripTravellers was not found or req.body is empty!`,

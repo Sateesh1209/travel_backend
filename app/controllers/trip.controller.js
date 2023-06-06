@@ -1,6 +1,7 @@
 const db = require("../models");
 const Trip = db.trips;
 const TripItenary = db.tripItenary;
+const TripEvent = db.events;
 const TripTravellers = db.tripTravellers;
 const Travellers = db.travellers;
 const Op = db.Sequelize.Op;
@@ -51,6 +52,7 @@ exports.create = (req, res) => {
 
   const travelIterations = req.body.tripIterations;
   const tripItenary = [];
+  let tripEvents = []
   travelIterations?.map((item) => {
     tripItenary.push({
       day: item.day,
@@ -58,17 +60,30 @@ exports.create = (req, res) => {
       hotelName: item.hotelName,
       meals: item.meals,
       visitPlaces: item.visitPlaces.join(","),
-      dayEvents: item.dayEvents.join(","),
     });
+    const events = item.events
+    events?.map(e => {
+      tripEvents.push({
+        event: e.event,
+      });
+    })
   });
 
   // Save Trip in the database
   Trip.create(trip)
     .then((data) => {
       tripItenary.map((item) => (item.tripId = data.id));
-      TripItenary.bulkCreate(tripItenary).then((data) => {
-        res.send({ status: "success", msg: "Trip successfully created" });
-      });
+      try{
+        TripItenary.bulkCreate(tripItenary).then((d) => {
+          tripEvents.map((item) => item.tripItenaryId = d[0].id)
+          TripEvent.bulkCreate(tripEvents).then((data) => {
+            res.send({ status: "success", msg: "Trip successfully created" });
+          })
+        })        
+      }
+      catch(e) {
+        res.status(500).send({ status: "Error", msg: "Failed to create Trip" });
+      }
       // res.send(data);
     })
     .catch((err) => {
@@ -89,6 +104,10 @@ exports.findAllForUser = (req, res) => {
         model: TripItenary,
         as: "tripItenary",
         required: false,
+        include: {
+          model: TripEvent,
+          as: 'events'
+        }
       },
     ],
     order: [
@@ -122,6 +141,10 @@ exports.findAllPublished = (req, res) => {
         model: TripItenary,
         as: "tripItenary",
         required: false,
+        include: {
+          model: TripEvent,
+          as: 'events'
+        }
       },
     ],
     order: [
@@ -155,6 +178,10 @@ exports.findOne = (req, res) => {
         model: TripItenary,
         as: "tripItenary",
         required: false,
+        include: {
+          model: TripEvent,
+          as: 'events'
+        }
       },
     ],
     order: [[TripItenary, "day", "ASC"]],
@@ -189,32 +216,61 @@ exports.update = (req, res) => {
   };
   const travelIterations = req.body.tripIterations;
   const tripItenary = [];
+  let tripEvents = []
   travelIterations?.map((item) => {
     tripItenary.push({
-      id: item.id,
       day: item.day,
       location: item.location,
       hotelName: item.hotelName,
       meals: item.meals,
       visitPlaces: item.visitPlaces.join(","),
-      dayEvents: item.dayEvents.join(","),
-      recipeId: id,
+      tripId: id,
     });
+    const events = item.events
+    events?.map(e => {
+      tripEvents.push({
+        event: e.event,
+      });
+    })
+    
   });
   Trip.update(trip, {
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
-        Promise.all(
-          tripItenary.map(async (trip) => {
-            await TripItenary.update(trip, {
-              where: { id: trip.id },
-            });
+        try{
+          TripItenary.destroy({
+            where: {tripId: id}
+          }).then((num) => {
+            if(num > 0){
+              TripItenary.bulkCreate(tripItenary).then((d) => {
+                tripEvents.map((item) => item.tripItenaryId = d[0].id)
+                TripEvent.bulkCreate(tripEvents).then((data) => {
+                  res.send({ status: "success", msg: "Trip successfully updated" });
+                })
+              })  
+            }
           })
-        ).then((data) => {
-          res.send({ status: "success", msg: "Trip updated successfully" });
-        });
+        }
+        catch(e) {
+          res.status(500).send({ status: "Error", msg: "Failed to update Trip" });
+        }
+        // Promise.all(tripItenary.map(async (trip) => {
+        //   await TripItenary.update(trip, {
+        //     where: { id: trip.id },
+        //   });
+        // })
+        // ).then((data) => {
+        //   Promise.all(tripEvents.map(async (event) => {
+        //     await TripEvent.update(event, {
+        //       where: { id: event.id },
+        //     });
+        //   })
+        //   ).then((data) => {
+        //     res.send({ status: "success", msg: "Trip updated successfully" });
+        //   })
+        // });
       } else {
         res.send({
           message: `Cannot update Trip with id=${id}. Maybe Trip was not found or req.body is empty!`,

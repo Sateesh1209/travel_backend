@@ -20,9 +20,14 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING(5000),
       allowNull: false,
     },
-    dayEvents: {
-      type: Sequelize.STRING(5000),
-      allowNull: false,
+    tripId: {
+      type: Sequelize.INTEGER,
+      foreignKey: {
+        allowNull: false,
+        target: "trips",
+        field: "id",
+        onDelete: "cascade",
+      },
     },
   });
   return TripItenary;
