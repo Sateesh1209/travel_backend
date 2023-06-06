@@ -13,6 +13,12 @@ module.exports = (app) => {
   // Retrieve all Trip Travellers
   router.get("/tripTravellers/", TripTravellers.findAll);
 
+  // Retrive all trips with trip tripItenary and tripTravellers and travellers  by user id 
+
+  router.get("/user/:userId/tripswithtripTravellers",
+    TripTravellers.findAllTripsJoinedByUser
+  )
+
   // Retrieve all Trip Travellers for a Trip
   router.get(
     "/trips/:tripId/tripTravellers/",

@@ -1,4 +1,7 @@
 const db = require("../models");
+const Trips = db.trips;
+const TripItenary = db.tripItenary;
+const TripEvent = db.events;
 const TripTravellers = db.tripTravellers;
 const Travellers = db.travellers;
 const Op = db.Sequelize.Op;
@@ -74,6 +77,89 @@ exports.findAll = (req, res) => {
       });
     });
 };
+
+exports.findAllTripsJoinedByUser = (req, res) => {
+  const userId = req.params.userId
+  TripTravellers.findAll({
+    where: { userId: userId },
+    include: [
+      {
+          model: Travellers,
+          as: "travellers",
+          required: true
+      },
+    ],
+  })
+    .then((data) => {
+      const tripIds = []
+      data?.map(item => {
+        tripIds.push(item.tripId)
+      })
+      Trips.findAll({
+        where: {
+          id: tripIds,
+          isPublished: true
+        },
+        include: [
+          {
+            model: TripItenary,
+            as: "tripItenary",
+            required: false,
+            include: {
+              model: TripEvent,
+              as: 'events'
+            }
+          },
+        ],
+        order: [
+          ["name", "ASC"],
+          [TripItenary, "day", "ASC"],
+        ],
+      }).then((result) => {
+        const final = {
+          onGoing: [],
+          upComing:[],
+          expired:[]
+        }
+        result?.map((trip)=> {
+          data?.map((tripTraveller) => {
+            if(trip.id === tripTraveller.tripId){
+              const today = new Date()
+              today.setHours(0, 0, 0, 0);
+              const fromDate = new Date(trip.fromDate)
+              fromDate.setHours(0, 0, 0, 0);
+              const toDate = new Date(trip.toDate)
+              toDate.setHours(0, 0, 0, 0);
+              const finalArr = {...trip}
+              finalArr.dataValues.tripTraveller = tripTraveller
+              if(toDate < today){
+                final.expired.push(trip)
+              }else if(today < fromDate){
+                final.upComing.push(trip)
+              }else{
+                final.onGoing.push(trip)
+              }
+            }
+          })
+        })
+        res.send(final);
+      }).catch((err) => {
+        res.status(500).send({
+          message:
+            err.message ||
+            "Some error occurred while retrieving tripTravellers for a trip.",
+        });
+      })
+    })
+
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message ||
+          "Some error occurred while retrieving tripTravellers for a trip.",
+      });
+    });
+}
 
 exports.findAllForRecipe = (req, res) => {
   const tripId = req.params.tripId;
