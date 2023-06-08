@@ -86,7 +86,7 @@ exports.findAllTripsJoinedByUser = (req, res) => {
       {
           model: Travellers,
           as: "travellers",
-          required: true
+          required: false
       },
     ],
   })
