@@ -40,7 +40,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "deploy/"
-          REMOTE_HOST: "ec2-3-22-181-106.us-east-2.compute.amazonaws.com"
+          REMOTE_HOST: "ec2-3-129-21-248.us-east-2.compute.amazonaws.com"
           REMOTE_USER: ubuntu
           TARGET: "nodeapps/travel_backend"
       - name: Execute SSH commmands on remote server
@@ -48,7 +48,7 @@ jobs:
         env:
           NAME: "Root"
         with:
-          hosts: "ubuntu@ec2-3-22-181-106.us-east-2.compute.amazonaws.com"
+          hosts: "ubuntu@ec2-3-129-21-248.us-east-2.compute.amazonaws.com"
           privateKey: ${{ secrets.SERVER_SSH_KEY }}
           debug: false
           command: |
