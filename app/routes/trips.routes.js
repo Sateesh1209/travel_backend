@@ -13,8 +13,19 @@ module.exports = (app) => {
     Trip.findAllForUser
   );
 
+    // Retrieve all tripPlan for Admin
+    router.get(
+      "/tripPlan/admin",
+      [authenticateRoute],
+      Trip.findAllForAdmin
+    );
+
   // Retrieve all published tripPlan
   router.get("/tripPlan/", Trip.findAllPublished);
+
+  //Retrive all registered users for all trips
+
+  router.get("/tripPlan/travellersByTripId/:tripId", Trip.findAllRegisteredUsers)
 
   // Retrieve a single Trip with id
   router.get("/tripPlan/:id", Trip.findOne);
