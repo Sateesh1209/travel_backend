@@ -1,4 +1,5 @@
 const db = require("../models");
+const { sendMail } = require("../utilities/email");
 const Trips = db.trips;
 const TripItenary = db.tripItenary;
 const TripEvent = db.events;
@@ -37,12 +38,23 @@ exports.create = (req, res) => {
     .then((data) => {
       tList.map((item) => (item.tripTravellerId  = data.id));
       try{
-        Travellers.bulkCreate(tList).then((d) => {
-            res.send({ status: "success", msg: "User successfully Joined" });
+        Travellers.bulkCreate(tList).then(async (d) => {
+          const user = await db.user.findOne({where: {id: data.userId}, attributes:['firstName','email']})
+          const trip = await Trips.findOne({where: {id: req.body.tripId}, attributes:['name','fromDate','toDate','countryName', 'description']})
+          const payload = {
+            userName: user.firstName,
+            tripName: trip.name,
+            fromDate: new Date(trip.fromDate).toISOString().split('T')[0],
+            toDate: new Date(trip.toDate).toISOString().split('T')[0],
+            destination: trip.countryName,
+            description: trip.description
+          }
+            sendMail(user.email, 'Trip Registration', 'joinTrip', payload)
+            res.send({ status: "success", message: "User successfully Joined" });
         })        
       }
       catch(e) {
-        res.status(500).send({ status: "Error", msg: "Failed to register" });
+        res.status(500).send({ status: "Error", message: "Failed to register" });
       }
     })
     .catch((err) => {
@@ -258,13 +270,13 @@ exports.update = (req, res) => {
           }).then((num) => {
             if(num > 0){
               Travellers.bulkCreate(travellers).then((d) => {
-                  res.send({ status: "success", msg: "Trip Travellers successfully updated" });
+                  res.send({ status: "success", message: "Trip Travellers successfully updated" });
                 })
             }
           })
         }
         catch(e) {
-          res.status(500).send({ status: "Error", msg: "Failed to update Trip" });
+          res.status(500).send({ status: "Error", message: "Failed to update Trip" });
         }
       } else {
         res.send({
@@ -282,16 +294,18 @@ exports.update = (req, res) => {
 };
 
 // Delete a TripTravellers with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
-
+  const traveller = await TripTravellers.findOne({where: {id: id}, attributes: ['userId']})
+  const user = await db.user.findOne({where: {id: traveller.userId}, attributes: ['email','firstName']})
   TripTravellers.destroy({
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
+        sendMail(user.email, 'Trip Withdrawal', 'tripWithdraw',user.firstName)
         res.send({
-          status: 'Success',
+          status: 'success',
           message: "TripTravellers was deleted successfully!",
         });
       } else {

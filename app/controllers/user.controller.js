@@ -3,6 +3,7 @@ const User = db.user;
 const Session = db.session;
 const Op = db.Sequelize.Op;
 const { encrypt, getSalt, hashPassword } = require("../authentication/crypto");
+const { sendMail } = require("../utilities/email.js");
 
 // Create and Save a new User
 exports.create = async (req, res) => {
@@ -60,6 +61,7 @@ exports.create = async (req, res) => {
         await User.create(user)
           .then(async (data) => {
             // Create a Session for the new user
+            sendMail(req.body.email, 'Registration Confirmation', 'registration', user.firstName)
             let userId = data.id;
             let isAdmin = data.isAdmin
             let expireTime = new Date();
