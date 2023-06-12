@@ -74,6 +74,10 @@ db.tripTravellers.belongsTo(
   db.trips,
   {  onDelete: "CASCADE" }
 );
+db.tripTravellers.belongsTo(
+  db.user,
+  {  onDelete: "CASCADE" }
+);
 
 db.tripTravellers.hasMany(
   db.travellers,
