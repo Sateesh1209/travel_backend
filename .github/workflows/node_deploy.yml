@@ -21,7 +21,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: dev
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
       - run: npm install
 
       - run: |
@@ -35,7 +37,7 @@ jobs:
       - run: npm run bundle
 
       - name: Deploy to Server
-        uses: easingthemes/ssh-deploy@v2.1.1
+        uses: easingthemes/ssh-deploy@v2.2.11
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
@@ -53,6 +55,8 @@ jobs:
           debug: false
           command: |
             cd nodeapps/travel_backend
+            node -v
+            npm -v
             npm install
             sudo systemctl stop travel_backend
             sudo cp travel_backend.service /lib/systemd/system/travel_backend.service
