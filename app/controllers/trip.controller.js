@@ -1,4 +1,5 @@
 const db = require("../models");
+const { sendMail } = require("../utilities/email");
 const Trip = db.trips;
 const TripItenary = db.tripItenary;
 const TripEvent = db.events;
@@ -64,6 +65,7 @@ exports.create = (req, res) => {
     const events = item.events
     events?.map(e => {
       tripEvents.push({
+        day: item.day,
         event: e.event,
       });
     })
@@ -75,20 +77,30 @@ exports.create = (req, res) => {
       tripItenary.map((item) => (item.tripId = data.id));
       try{
         TripItenary.bulkCreate(tripItenary).then((d) => {
-          tripEvents.map((item) => item.tripItenaryId = d[0].id)
-          TripEvent.bulkCreate(tripEvents).then((data) => {
-            res.send({ status: "success", msg: "Trip successfully created" });
+          const events = []
+                tripEvents.map((item) => {
+                  d?.map((tripItenary) => {
+                    if(tripItenary.dataValues.day === item.day){
+                      events.push({
+                        event: item.event,
+                        tripItenaryId: tripItenary.id
+                      })
+                    }
+                  })
+                })
+          TripEvent.bulkCreate(events).then((data) => {
+            res.send({ status: "success", message: "Trip successfully created" });
           })
         })        
       }
       catch(e) {
-        res.status(500).send({ status: "Error", msg: "Failed to create Trip" });
+        res.status(500).send({ status: "Error", message: "Failed to create Trip" });
       }
       // res.send(data);
     })
     .catch((err) => {
       res.status(500).send({
-        status: "failure",
+        status: "Failed",
         message: err.message || "Error while creating trip, Please try again.",
       });
     });
@@ -109,6 +121,14 @@ exports.findAllForUser = (req, res) => {
           as: 'events'
         }
       },
+      {
+        model: TripTravellers,
+        as: 'tripTravellers',
+        required: false,
+        where: {
+          userId: userId
+        }
+      }
     ],
     order: [
       ["name", "ASC"],
@@ -120,12 +140,54 @@ exports.findAllForUser = (req, res) => {
         res.send(data);
       } else {
         res.status(404).send({
+          status: 'Failed',
           message: `Cannot find Trips for user with id=${userId}.`,
         });
       }
     })
     .catch((err) => {
       res.status(500).send({
+        status: 'Failed',
+        message:
+          err.message || "Error retrieving Trips for user with id=" + userId,
+      });
+    });
+};
+
+// Find all Trips for a user
+exports.findAllForAdmin = (req, res) => {
+  const userId = req.params.userId;
+  Trip.findAll({
+    // where: { userId: userId },
+    include: [
+      {
+        model: TripItenary,
+        as: "tripItenary",
+        required: false,
+        include: {
+          model: TripEvent,
+          as: 'events'
+        }
+      }
+    ],
+    order: [
+      ["name", "ASC"],
+      [TripItenary, "day", "ASC"],
+    ],
+  })
+    .then((data) => {
+      if (data) {
+        res.send(data);
+      } else {
+        res.status(404).send({
+          status: 'Failed',
+          message: `Cannot find Trips for user with id=${userId}.`,
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(500).send({
+        status: 'Failed',
         message:
           err.message || "Error retrieving Trips for user with id=" + userId,
       });
@@ -170,6 +232,37 @@ exports.findAllPublished = (req, res) => {
       });
     });
 };
+
+// Find all registered users
+
+exports.findAllRegisteredUsers = (req, res) => {
+  const tripId = req.params.tripId;
+  Trip.findAll({
+    where: { id: tripId },
+    include: [{
+      model: TripTravellers,
+      as: 'tripTravellers',
+      required: false,
+      include: [{
+        model: db.user,
+        as: 'user',
+        attributes: ['firstName','lastName']
+      },{
+        model: Travellers,
+        as: 'travellers',
+        required: false
+      }]
+    }]
+  }).then((data) => {
+    res.send(data)
+  }).catch((err) => {
+    res.status(500).send({
+      status: 'Failed',
+      message: `Cannot find Registered users.`,
+    })
+  })
+}
+
 
 // Find a single Trip with an id
 exports.findOne = (req, res) => {
@@ -261,14 +354,25 @@ exports.update = (req, res) => {
                   })
                 })
                 TripEvent.bulkCreate(events).then((data) => {
-                  res.send({ status: "success", msg: "Trip successfully updated" });
+                  TripTravellers.findAll({where : {tripId: id}, include: [{model: db.user,as:'user',attributes: ['email']}]}).then((emails) => {
+                    const mailAddresses = []
+                    emails?.map((email) => {
+                      mailAddresses.push(email?.user?.email) })
+                    if(trip.isPublished){
+                      sendMail(mailAddresses.join(','), 'Trip Update', 'tripUpdate', '')
+                    }else {
+                      sendMail(mailAddresses.join(','), 'Trip Cancelled', 'deleteOrUnpublish', '')
+                    }
+                    res.send({ status: "success", message: "Trip successfully updated" });
+                  })
+                  
                 })
               })  
             }
           })
         }
         catch(e) {
-          res.status(500).send({ status: "Error", msg: "Failed to update Trip" });
+          res.status(500).send({ status: "Error", message: "Failed to update Trip" });
         }
         // Promise.all(tripItenary.map(async (trip) => {
         //   await TripItenary.update(trip, {
@@ -282,7 +386,7 @@ exports.update = (req, res) => {
         //     });
         //   })
         //   ).then((data) => {
-        //     res.send({ status: "success", msg: "Trip updated successfully" });
+        //     res.send({ status: "success", message: "Trip updated successfully" });
         //   })
         // });
       } else {
@@ -298,14 +402,31 @@ exports.update = (req, res) => {
     });
 };
 // Delete a Trip with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
+  const trip = await Trip.findAll({where: {id: id}, include: [{
+    model: TripTravellers,
+    as: 'tripTravellers',
+    required: false,
+    include: {
+      model: db.user,
+      as: 'user',
+      required: false,
+      attributes: ['email']
+    }
+  }]})
+  const mailAddresses = []
+  trip[0]?.tripTravellers?.map(travellers => {
+    mailAddresses.push(travellers.user.email)
+  })
+  console.log("🚀 ~ file: trip.controller.js:419 ~ exports.delete ~ mailAddresses:", mailAddresses)
   Trip.destroy({
     where: { id: id },
   })
     .then((number) => {
       if (number == 1) {
-        res.send({ status: "success", msg: "Trip successfully deleted" });
+        sendMail(mailAddresses.join(','), 'Trip Cancelled', 'deleteOrUnpublish', '')
+        res.send({ status: "success", message: "Trip successfully deleted" });
       } else {
         res.send({
           message: `Cannot delete Trip with id=${id}. Maybe Trip was not found!`,
@@ -334,3 +455,4 @@ exports.deleteAll = (req, res) => {
       });
     });
 };
+
