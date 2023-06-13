@@ -42,21 +42,21 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "deploy/"
-          REMOTE_HOST: "ec2-3-142-173-103.us-east-2.compute.amazonaws.com"
+          REMOTE_HOST: "ec2-18-220-164-85.us-east-2.compute.amazonaws.com"
           REMOTE_USER: ubuntu
-          TARGET: "nodeapps/recipe_backend"
+          TARGET: "nodeapps/travel-backend"
       - name: Execute SSH commmands on remote server
         uses: JimCronqvist/action-ssh@master
         env:
           NAME: "Root"
         with:
-          hosts: "ubuntu@ec2-3-142-173-103.us-east-2.compute.amazonaws.com"
+          hosts: "ubuntu@ec2-18-220-164-85.us-east-2.compute.amazonaws.com"
           privateKey: ${{ secrets.SERVER_SSH_KEY }}
           debug: false
           command: |
-            cd nodeapps/recipe_backend
+            cd nodeapps/travel-backend
             npm install
-            sudo systemctl stop recipe-backend
-            sudo cp recipe-backend.service /lib/systemd/system/recipe-backend.service
+            sudo systemctl stop travel-backend
+            sudo cp travel-backend.service /lib/systemd/system/travel-backend.service
             sudo systemctl daemon-reload
-            sudo systemctl start recipe-backend
+            sudo systemctl start travel-backend
