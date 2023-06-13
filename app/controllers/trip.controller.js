@@ -109,8 +109,11 @@ exports.create = (req, res) => {
 // Find all Trips for a user
 exports.findAllForUser = (req, res) => {
   const userId = req.params.userId;
+  const today = new Date();
   Trip.findAll({
-    // where: { userId: userId },
+    where: { isPublished: true, fromDate: {
+      [Op.gt]: today
+    } },
     include: [
       {
         model: TripItenary,
