@@ -23,7 +23,7 @@ jobs:
           ref: dev
       - uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+            node-version: 16
       - run: npm install
 
       - run: |
@@ -37,31 +37,26 @@ jobs:
       - run: npm run bundle
 
       - name: Deploy to Server
-        uses: easingthemes/ssh-deploy@v2.2.11
+        uses: easingthemes/ssh-deploy@v2.1.1
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "deploy/"
-          REMOTE_HOST: "ec2-3-129-21-248.us-east-2.compute.amazonaws.com"
+          REMOTE_HOST: "ec2-3-142-173-103.us-east-2.compute.amazonaws.com"
           REMOTE_USER: ubuntu
-          TARGET: "nodeapps/travel_backend"
+          TARGET: "nodeapps/recipe_backend"
       - name: Execute SSH commmands on remote server
         uses: JimCronqvist/action-ssh@master
         env:
           NAME: "Root"
-          PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          HOSTNAME: "ec2-3-129-21-248.us-east-2.compute.amazonaws.com"
-          USER_NAME: ubuntu
         with:
-          hosts: "ubuntu@ec2-3-129-21-248.us-east-2.compute.amazonaws.com"
+          hosts: "ubuntu@ec2-3-142-173-103.us-east-2.compute.amazonaws.com"
           privateKey: ${{ secrets.SERVER_SSH_KEY }}
           debug: false
           command: |
-            cd nodeapps/travel_backend
-            node -v
-            npm -v
+            cd nodeapps/recipe_backend
             npm install
-            sudo systemctl stop travel_backend
-            sudo cp travel_backend.service /lib/systemd/system/travel_backend.service
+            sudo systemctl stop recipe-backend
+            sudo cp recipe-backend.service /lib/systemd/system/recipe-backend.service
             sudo systemctl daemon-reload
-            sudo systemctl start travel_backend
+            sudo systemctl start recipe-backend
